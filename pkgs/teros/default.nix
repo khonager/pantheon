@@ -1,10 +1,10 @@
-{ lib, stdenv, source }: # <--- Now accepts 'source' as an argument
+{ lib, stdenv, source }:
 
 stdenv.mkDerivation {
   pname = "teros-theme-pack";
   version = "1.0";
 
-  # Use the source passed from the Flake (no hash needed here!)
+  # Use the source passed from the Flake (nix flake lock --update-input pantheon)
   src = source;
 
   installPhase = ''
