@@ -1,46 +1,41 @@
 { lib, stdenv, fetchFromGitHub }:
 
 stdenv.mkDerivation {
-  pname = "teros-theme-pack"; # Renamed since it's now a pack
+  pname = "teros-theme-pack";
   version = "1.0";
 
   src = fetchFromGitHub {
     owner = "khonager";
     repo = "teros";
-    rev = "COMMIT_HASH_HERE";
+    rev = "COMMIT_HASH_HERE"; # Update this after you push your themes!
     sha256 = lib.fakeSha256;
   };
 
   installPhase = ''
-    # 1. Prepare the destination
+    # Destination in the Nix Store
     themeDir="$out/share/plymouth/themes"
     mkdir -p $themeDir
 
-    # 2. Copy ALL folders from your repo to the Nix Store
-    cp -r * $themeDir
+    # Copy contents of the 'themes' folder from your repo
+    # This results in $out/share/plymouth/themes/shiro and .../sora
+    cp -r themes/* $themeDir
 
-    # 3. Smart Loop: Fix paths for EVERY .plymouth file found
-    # This automatically finds 'rings.plymouth', 'teros-titan.plymouth', etc.
-    # and points them to the correct Nix store paths.
-    
+    # Fix paths for EVERY .plymouth file in all subfolders
     find $themeDir -name "*.plymouth" | while read file; do
-      # Get the folder where the file lives
       dir=$(dirname "$file")
       
-      # Update ImageDir to the current Nix store path
+      # 1. Point ImageDir to the theme folder
       sed -i "s@ImageDir=.*@ImageDir=$dir@" "$file"
       
-      # Update ScriptFile (Assumes script name matches folder name or is defined in .plymouth)
-      # We use a regex to capture whatever script file was originally defined and prepend the path
-      sed -i "s@ScriptFile=\(.*\)$@ScriptFile=$dir/\1@" "$file"
-      
-      # Cleanup: Remove the explicit "./" if the user added it, to avoid double slashes
-      sed -i "s@$dir/\./@$dir/@" "$file"
+      # 2. Point ScriptFile to the theme folder (handling local paths)
+      # This regex takes "ScriptFile=./sora.script" and turns it into "ScriptFile=/nix/store/.../sora.script"
+      sed -i "s@ScriptFile=\./@ScriptFile=$dir/@" "$file"
+      sed -i "s@ScriptFile=\([^/]\)@ScriptFile=$dir/\1@" "$file"
     done
   '';
 
   meta = with lib; {
-    description = "Khonager's Plymouth Theme Collection";
+    description = "Khonager's Teros Theme Pack (Sora & Shiro)";
     platforms = platforms.linux;
   };
 }
