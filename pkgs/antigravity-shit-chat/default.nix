@@ -11,21 +11,19 @@ buildNpmPackage rec {
     hash = "sha256-Er2PWkU1QfS3xb1P3P7Fvi81XwN3uwnx+l4Kbr4Ae/I=";
   };
 
-  # Provide the generated package-lock.json since it's not in the repo
-  postUnpack = ''
-    cp ${./package-lock.json} source/package-lock.json
-  '';
-
-  npmDepsHash = lib.fakeHash;
-
-  dontNpmBuild = true;
-
+  # Use postPatch to copy the lockfile so it's available for the npm-deps derivation
   postPatch = ''
+    cp ${./package-lock.json} package-lock.json
+
     # Patch server.js to allow configuring the CDP port via environment variable
     substituteInPlace server.js \
       --replace "const PORTS = [9000, 9001, 9002, 9003];" \
                 "const PORTS = [ parseInt(process.env.CDP_PORT) || 9000, 9001, 9002, 9003 ];"
   '';
+
+  npmDepsHash = lib.fakeHash;
+
+  dontNpmBuild = true;
 
   installPhase = ''
     runHook preInstall
