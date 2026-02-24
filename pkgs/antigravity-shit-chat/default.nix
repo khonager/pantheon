@@ -18,10 +18,21 @@ buildNpmPackage rec {
     # Patch server.js to allow configuring the CDP port via environment variable
     substituteInPlace server.js \
       --replace "const PORTS = [9000, 9001, 9002, 9003];" \
-                "const PORTS = [ parseInt(process.env.CDP_PORT) || 9000, 9001, 9002, 9003 ];"
+                "const PORTS = [ parseInt(process.env.CDP_PORT) || 9000, 9001, 9002, 9003 ];" \
+      --replace "document.getElementById('cascade')" \
+                "(document.getElementById('cascade') || document.getElementById('conversation'))" \
+      --replace "clone.querySelector('[contenteditable=\"true\"]')?.closest('div[id^=\"cascade\"] > div')" \
+                "(clone.querySelector('[contenteditable=\"true\"]')?.closest('div[id^=\"cascade\"] > div') || document.getElementById('antigravity.agentSidePanelInputBox'))" \
+      --replace "replace(/(^|[\\s,}])body(?=[\\s,{])/gi, '\$1#cascade')" \
+                "replace(/(^|[\\s,}])body(?=[\\s,{])/gi, '\$1#conversation')" \
+      --replace "replace(/(^|[\\s,}])html(?=[\\s,{])/gi, '\$1#cascade')" \
+                "replace(/(^|[\\s,}])html(?=[\\s,{])/gi, '\$1#conversation')"
+
+    # Use a more flexible sed for the regex parts since backslashes in substituteInPlace can be tricky
+    sed -i \"s|'\\\$1#cascade'|'\\\$1#conversation'|g\" server.js
   '';
 
-  npmDepsHash = "sha256-Eac1WwbaVEpIS6/oz9WHHbNsAEsursroFhE1EQQhMl4=";
+  npmDepsHash = lib.fakeHash;
 
   dontNpmBuild = true;
 
