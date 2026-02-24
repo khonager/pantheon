@@ -17,19 +17,24 @@ buildNpmPackage rec {
 
     # Patch server.js to allow configuring the CDP port via environment variable
     substituteInPlace server.js \
-      --replace "const PORTS = [9000, 9001, 9002, 9003];" \
-                "const PORTS = [ parseInt(process.env.CDP_PORT) || 9000, 9001, 9002, 9003 ];" \
-      --replace "document.getElementById('cascade')" \
-                "(document.getElementById('cascade') || document.getElementById('conversation'))" \
-      --replace "clone.querySelector('[contenteditable=\"true\"]')?.closest('div[id^=\"cascade\"] > div')" \
-                "(clone.querySelector('[contenteditable=\"true\"]')?.closest('div[id^=\"cascade\"] > div') || document.getElementById('antigravity.agentSidePanelInputBox'))" \
-      --replace "replace(/(^|[\\s,}])body(?=[\\s,{])/gi, '\$1#cascade')" \
-                "replace(/(^|[\\s,}])body(?=[\\s,{])/gi, '\$1#conversation')" \
-      --replace "replace(/(^|[\\s,}])html(?=[\\s,{])/gi, '\$1#cascade')" \
-                "replace(/(^|[\\s,}])html(?=[\\s,{])/gi, '\$1#conversation')"
+      --replace-fail "const PORTS = [9000, 9001, 9002, 9003];" \
+                     "const PORTS = [ (parseInt(process.env.CDP_PORT) || 9000), 9001, 9002, 9003 ];"
 
-    # Use a more flexible sed for the regex parts since backslashes in substituteInPlace can be tricky
-    sed -i \"s|'\\\$1#cascade'|'\\\$1#conversation'|g\" server.js
+    # Patch discovery logic to support both 'cascade' and 'conversation' IDs
+    # Antigravity updated its internal naming in recent versions
+    substituteInPlace server.js \
+      --replace-fail "document.getElementById('cascade')" \
+                     "(document.getElementById('cascade') || document.getElementById('conversation'))"
+
+    # Patch input cleanup logic to find the new input box ID if the old one is missing
+    substituteInPlace server.js \
+      --replace-fail "clone.querySelector('[contenteditable=\"true\"]')?.closest('div[id^=\"cascade\"] > div')" \
+                     "(clone.querySelector('[contenteditable=\"true\"]')?.closest('div[id^=\"cascade\"] > div') || document.getElementById('antigravity.agentSidePanelInputBox'))"
+
+    # Patch CSS scoping to use #conversation instead of #cascade
+    # We do two replacements for body and html respectively
+    substituteInPlace server.js \
+      --replace-fail "'\$1#cascade'" "'\$1#conversation'"
   '';
 
   npmDepsHash = lib.fakeHash;
