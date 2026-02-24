@@ -37,7 +37,7 @@ buildNpmPackage rec {
       --replace-fail "'\$1#cascade'" "'\$1#conversation'"
   '';
 
-  npmDepsHash = lib.fakeHash;
+  npmDepsHash = "sha256-Eac1WwbaVEpIS6/oz9WHHbNsAEsursroFhE1EQQhMl4=";
 
   dontNpmBuild = true;
 
