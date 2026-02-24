@@ -21,7 +21,7 @@ buildNpmPackage rec {
                 "const PORTS = [ parseInt(process.env.CDP_PORT) || 9000, 9001, 9002, 9003 ];"
   '';
 
-  npmDepsHash = lib.fakeHash;
+  npmDepsHash = "sha256-Eac1WwbaVEpIS6/oz9WHHbNsAEsursroFhE1EQQhMl4=";
 
   dontNpmBuild = true;
 
