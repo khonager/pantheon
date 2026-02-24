@@ -22,6 +22,8 @@
         teros = prev.callPackage ./pkgs/teros/default.nix {
           source = teros-src;
         };
+
+        antigravity-shit-chat = prev.callPackage ./pkgs/antigravity-shit-chat/default.nix { };
       };
     };
 }
